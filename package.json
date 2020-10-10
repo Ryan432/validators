@@ -1,0 +1,24 @@
+{
+  "name": "validators",
+  "version": "1.0.0",
+  "description": "Package for validate JSON objects.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ran Amar",
+  "license": "ISC",
+  "dependencies": {
+    "aigle": "^1.14.1",
+    "lodash": "^4.17.20"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.10.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-plugin-import": "^2.22.1",
+    "husky": "^4.3.0",
+    "nodemon": "^2.0.4"
+  }
+}
