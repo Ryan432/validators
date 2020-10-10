@@ -181,3 +181,5 @@ async function validateModifier(data, validKeysAndTypes) {
 		valid: true
 	};
 }
+
+export default Validators;
