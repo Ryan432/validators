@@ -1,184 +1,180 @@
-import tests from '../tests.js';
 import aigle from 'aigle';
 import _ from 'lodash';
+import moment from 'moment';
+
+const emailRegExPattern = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
 
 class Validators {
-	static validateObject = async (objectToValidate, validObjectSchema) => {
+	static validateObject = async (objectToValidate, validObjectSchema, allowSchemaKeysOnly = true) => {
 		const validObjectKeys = Object.keys(validObjectSchema);
 
-		const validationResult = [];
+		const validationErrors = [];
 
 		await aigle.eachLimit(validObjectKeys, 5, async (objectKey) => {
+			const { type, required } = validObjectSchema[objectKey];
 			const keyValue = _.get(objectToValidate, objectKey, 'NotFound');
-			const { type, required, minLength, maxLength, minNum, numRange, options, isEmail } = validObjectSchema[objectKey];
 
 			if (keyValue === 'NotFound' && required) {
-				validationResult.push({
+				validationErrors.push({
 					valid: false,
-					message: `${objectKey} is required and it's missing.`
+					message: `The property ${objectKey} is required and it's missing.`
 				});
 			}
-		});
-	};
-}
 
-async function validateRequiredAndTypes(data, validKeysAndTypes) {
-	const validKeys = Object.keys(validKeysAndTypes);
-
-	const res = [];
-
-	await aigle.eachLimit(validKeys, 5, async (key) => {
-		const val = _.get(data, key, 'default');
-
-		if (val !== 'default') {
-			if (validKeysAndTypes[key].type === 'array') {
-				const isArray = _.isArray(val);
-				if (!isArray) {
-					res.push({
-						valid: false,
-						message: `${key} data type is invalid required ${validKeysAndTypes[key].type} got ${typeof val}`
-					});
-				}
-
-				if (_.has(validKeysAndTypes[key], 'validArrayObjects')) {
-					await aigle.eachLimit(val, 10, async (obj, index) => {
-						const validatedObjects = await validateModifier(obj, validKeysAndTypes[key].validArrayObjects);
-
-						if (!_.get(validatedObjects, 'valid')) {
-							res.push({
+			switch (type) {
+				case 'array':
+					{
+						const { validateArrayObjectsSchema } = validObjectSchema[objectKey];
+						const isArray = _.isArray(keyValue);
+						if (!isArray) {
+							validationErrors.push({
 								valid: false,
-								message: `Array object of ${key} is invalid at index ${index}`,
-								data: validatedObjects
+								message: `The property ${objectKey} data type is invalid required ${type} got ${typeof keyValue}`
 							});
 						}
-					});
-				}
-			} else if (validKeysAndTypes[key].type === 'date') {
-				const validFormat = moment(val, validKeysAndTypes[key].format).format(validKeysAndTypes[key].format) === val;
-				if (!validFormat) {
-					res.push({
-						valid: false,
-						message: `${key} data type is invalid required ${validKeysAndTypes[key].type} in format '${validKeysAndTypes[key].format}' got '${val}'`
-					});
-				}
-			} else if (validKeysAndTypes[key].type === 'number') {
-				let isNumber = Number(val);
-				isNumber = isNumber == 0 ? true : isNumber;
-				if (!isNumber) {
-					res.push({
-						valid: false,
-						message: `${key} data type is invalid required ${validKeysAndTypes[key].type}.'`
-					});
-				}
-			} else if (typeof val !== validKeysAndTypes[key].type) {
-				res.push({
-					valid: false,
-					message: `${key} data type is invalid required ${validKeysAndTypes[key].type} got ${typeof val}`
-				});
+
+						if (validateArrayObjectsSchema) {
+							await aigle.eachLimit(keyValue, 5, async (obj, index) => {
+								const validatedObjects = await this.validateObject(obj, validateArrayObjectsSchema);
+
+								if (!_.get(validatedObjects, 'valid')) {
+									validationErrors.push({
+										valid: false,
+										message: `Array object of ${objectKey} is invalid at index ${index}`,
+										data: validatedObjects
+									});
+								}
+							});
+						}
+					}
+					break;
+
+				case 'date':
+					{
+						const { format } = validObjectSchema[objectKey];
+						const validFormat = moment(keyValue, format).format(format) === keyValue;
+						if (!validFormat) {
+							validationErrors.push({
+								valid: false,
+								message: `The property ${objectKey} data type is invalid required ${type} in format '${format}' got '${keyValue}.'`
+							});
+						}
+					}
+					break;
+
+				case 'number':
+					{
+						let isNumber = Number(keyValue);
+						isNumber = isNumber === 0 ? true : isNumber;
+						if (!isNumber) {
+							validationErrors.push({
+								valid: false,
+								message: `The property ${objectKey} data type is invalid required ${type}.'`
+							});
+						}
+					}
+					break;
+				default:
+					{
+						let keyValueType = typeof keyValue;
+						if (keyValueType !== type) {
+							validationErrors.push({
+								valid: false,
+								message: `The property ${objectKey} data type is invalid, required ${type} got ${keyValueType}`
+							});
+						}
+					}
+					break;
 			}
 
-			if (validKeysAndTypes[key].minLength) {
-				if (_.size(val) < validKeysAndTypes[key].minLength) {
-					res.push({
-						valid: false,
-						message: `The field ${key} as minimum length of ${validKeysAndTypes[key].minLength}, got ${_.size(val)}`
-					});
-				}
-			}
+			const { minLength, maxLength, minNum, numRange, options, isEmail } = validObjectSchema[objectKey];
 
-			if (validKeysAndTypes[key].maxLength) {
-				if (_.size(val) > validKeysAndTypes[key].maxLength) {
-					res.push({
+			if (minLength) {
+				const valueLength = _.size(keyValue);
+				if (valueLength < minLength) {
+					validationErrors.push({
 						valid: false,
-						message: `The field ${key} as maximum length of ${validKeysAndTypes[key].maxLength}, got ${val.length}`
-					});
-				}
-			}
-
-			if (validKeysAndTypes[key].minNum) {
-				if (val < validKeysAndTypes[key].minNum) {
-					res.push({
-						valid: false,
-						message: `The field ${key} as minimum number of ${validKeysAndTypes[key].minNum}, got ${val}`
-					});
-				}
-			}
-
-			if (validKeysAndTypes[key].numRange) {
-				const min = validKeysAndTypes[key].numRange[0];
-				const max = validKeysAndTypes[key].numRange[1];
-				if (val <= min || val > max) {
-					res.push({
-						valid: false,
-						message: `The field ${key} as number range between ${min} - ${max}, got ${val}`
-					});
-				}
-			}
-
-			if (validKeysAndTypes[key].options) {
-				const optionsArr = validKeysAndTypes[key].options;
-				if (!optionsArr.includes(val)) {
-					res.push({
-						valid: false,
-						message: `The field ${key} can be only one of the options ${optionsArr.toString()}`
+						message: `The property ${objectKey} as minimum length of ${minLength}, got ${valueLength} length.`
 					});
 				}
 			}
 
-			if (validKeysAndTypes[key].isEmail) {
-				const pattern = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
-
-				if (!pattern.test(val)) {
-					res.push({
+			if (maxLength) {
+				const valueLength = _.size(keyValue);
+				if (valueLength > maxLength) {
+					validationErrors.push({
 						valid: false,
-						message: `The field is email, got ${val}`
+						message: `The property ${objectKey} as maximum length of ${maxLength}, got ${valueLength} length.`
 					});
 				}
 			}
-		} else if (val === 'default' && validKeysAndTypes[key].required) {
-			res.push({
-				valid: false,
-				message: `${key} is missing`
+
+			if (minNum) {
+				if (keyValue < minNum) {
+					validationErrors.push({
+						valid: false,
+						message: `The property ${objectKey} as minimum number of ${minNum}, got ${keyValue}.`
+					});
+				}
+			}
+
+			if (numRange) {
+				if ((!_.isArray(numRange) && _.size(numRange) > 2) || _.size(numRange) < 2) {
+					throw new Error(`numRange should be an array with 2 values, for example: ['minimum', 'maximum'].`);
+				}
+				const [min, max] = numRange;
+
+				if (keyValue <= min || keyValue > max) {
+					validationErrors.push({
+						valid: false,
+						message: `The property ${objectKey} as number range between ${min} to ${max}, got ${keyValue}.`
+					});
+				}
+			}
+
+			if (options) {
+				if (!options.includes(keyValue)) {
+					validationErrors.push({
+						valid: false,
+						message: `The property ${objectKey} can be only one of the options ${options.toString()}.`
+					});
+				}
+			}
+
+			if (isEmail) {
+				if (!emailRegExPattern.test(keyValue)) {
+					validationErrors.push({
+						valid: false,
+						message: `The property ${objectKey} is invalid email, got ${keyValue}`
+					});
+				}
+			}
+		});
+
+		if (allowSchemaKeysOnly) {
+			const objectToValidateKeys = Object.keys(objectToValidate);
+			await aigle.eachLimit(objectToValidateKeys, 5, (key) => {
+				const keyIsAllowed = _.includes(validObjectKeys, key);
+				if (!keyIsAllowed) {
+					validationErrors.push({
+						valid: false,
+						message: `The property ${key} is not a part of the object schema.`,
+						schemaAllowedKeys: validObjectKeys
+					});
+				}
 			});
 		}
-	});
 
-	// check if there is a invalid key/value and return it if there is.
-	if (_.size(res) !== 0) {
-		return res;
-	}
-
-	// if all valid return valid = true.
-	return {
-		valid: true
-	};
-}
-
-async function validateModifier(data, validKeysAndTypes) {
-	const dataKeys = Object.keys(data);
-	const validKeys = Object.keys(validKeysAndTypes);
-	const res = [];
-
-	await aigle.eachLimit(dataKeys, 1, (key) => {
-		if (!_.includes(validKeys, key)) {
-			res.push({
-				valid: false,
-				message: `${key} is not available for modifying`
-			});
+		const isObjectValid = _.size(validationErrors) === 0 ? true : false;
+		if (!isObjectValid) {
+			return {
+				validationErrors,
+				validObjectSchema
+			};
 		}
-	});
-
-	const validRaT = await validateRequiredAndTypes(data, validKeysAndTypes);
-	if (!_.get(validRaT, 'valid')) {
-		res.push(...validRaT);
-	}
-
-	if (_.size(res) !== 0) {
-		return res;
-	}
-
-	return {
-		valid: true
+		return {
+			valid: true
+		};
 	};
 }
 
