@@ -46,7 +46,7 @@ const validationTests = async () => {
 
 	const objectToValidate = {
 		name: 'Ran',
-		email: 'ryan@utopia.tech',
+		email: 'ryan@email.com',
 		gender: 'male',
 		age: 35,
 		phoneNumbers: [
