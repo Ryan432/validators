@@ -5,9 +5,17 @@ import moment from 'moment';
 const emailRegExPattern = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
 
 class Validators {
-	static validateObject = async (objectToValidate, validObjectSchema, allowSchemaKeysOnly = true) => {
-		const validObjectKeys = Object.keys(validObjectSchema);
+	#validObjectSchema;
+	constructor(validObjectSchema){
+		this.#validObjectSchema = validObjectSchema;
+	}
 
+	static validateObject = async (objectToValidate, validObjectSchema = this.#validObjectSchema, allowSchemaKeysOnly = true) => {
+		if(!validObjectSchema){
+			throw new Error('Not provided validObjectSchema.')
+		}
+
+		const validObjectKeys = Object.keys(validObjectSchema);
 		const validationErrors = [];
 
 		await aigle.eachLimit(validObjectKeys, 5, async (objectKey) => {
@@ -165,7 +173,7 @@ class Validators {
 			});
 		}
 
-		const isObjectValid = _.size(validationErrors) === 0 ? true : false;
+		const isObjectValid = _.size(validationErrors) === 0 || false;
 		if (!isObjectValid) {
 			return {
 				validationErrors,
