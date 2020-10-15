@@ -1,81 +1,64 @@
-import moment from 'moment';
+// import moment from 'moment';
 import Validators from './src/Validators.js';
 
-const validationTests = async () => {
-	const validObjectSchema = {
-		name: {
-			type: 'string',
-			maxLength: 5,
-			required: true
+const validationTest = async () => {
+	const objectToValidate = {
+		id: 10,
+		email: 'ryan@utopia.tech',
+		username: 'Ryan432',
+		date: '2020-10-15 18:05:00',
+		number: 5,
+		string: 'min length 4',
+		ip: '127.0.0.1',
+		object: {
+			id: 10,
+			name: 'object name'
 		},
-		email: {
-			type: 'string',
-			isEmail: true,
-			required: true
-		},
-		gender: {
-			type: 'string',
-			options: ['male', 'female']
-		},
-		age: {
-			type: 'number',
-			numRange: [10, 35],
-			required: true
-		},
-		phoneNumbers: {
-			type: 'array',
+		array: [
+			{
+				id: 10,
+				name: 'array object'
+			}
+		]
+	};
+	console.log(JSON.stringify({ objectToValidate }, 2, 3));
+	console.log();
+
+	const validObject = {
+		id: Validators.id(),
+		email: Validators.email({ required: true }),
+		username: Validators.username({ required: true }),
+		date: Validators.date(),
+		number: Validators.number({ required: true, minNum: 1, maxNum: 10 }),
+		string: Validators.string({ required: true, minLength: 5 }),
+		ip: Validators.ip({ required: true, options: ['127.0.0.1', '127.0.1.1'] }),
+		object: Validators.object({
 			required: true,
-			maxLength: 5,
-			validateArrayObjectsSchema: {
-				name: {
-					type: 'string',
-					required: true
-				},
-				number: {
-					type: 'string',
-					required: true,
-					minNum: 6
+			objectSchema: {
+				id: Validators.id({ required: true }),
+				name: Validators.string({ required: true })
+			}
+		}),
+		array: Validators.array({
+			validArraySchema: {
+				type: 'object',
+				objectSchema: {
+					id: Validators.id({ required: true }),
+					name: Validators.string({ required: true })
 				}
 			}
-		},
-		currentTime: {
-			type: 'date',
-			format: 'YYYY-MM-DD HH:mm:ss'
-		}
+		})
 	};
 
-	const objectToValidate = {
-		name: 'Ran',
-		email: 'ryan@email.com',
-		gender: 'male',
-		age: 35,
-		phoneNumbers: [
-			{
-				name: 'main',
-				number: '+9724564654'
-			},
-			{
-				name: 'work',
-				number: '+357545431651'
-			}
-		],
-		currentTime: moment().format('YYYY-MM-DD HH:mm:ss')
-	};
-	console.log('The object schema is:');
 	console.log();
-	console.log(validObjectSchema);
+	console.log(JSON.stringify({ validObject }, 2, 3));
 	console.log();
-	console.log('Going to validate that object:');
-	console.log(objectToValidate);
-	console.log();
-
 	try {
-		const validationResult = await Validators.validateObject(objectToValidate, validObjectSchema);
-		console.log('The validation result is:');
-		console.log(validationResult);
+		const validationRes = await Validators.objectValidator(objectToValidate, validObject);
+		console.log(validationRes);
 	} catch (err) {
-		console.log(err);
+		console.log(JSON.stringify({ err }, 2, 5));
 	}
 };
 
-validationTests();
+validationTest();
