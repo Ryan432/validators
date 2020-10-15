@@ -1,5 +1,5 @@
 // import moment from 'moment';
-import Validators from './src/Validators.js';
+import Validators from './src/validators.js';
 
 const validationTest = async () => {
 	const objectToValidate = {
