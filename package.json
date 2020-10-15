@@ -5,7 +5,8 @@
 	"description": "Package for validate JSON objects.",
 	"main": "index.js",
 	"scripts": {
-		"test": "node tests.js"
+		"test": "node tests.js",
+		"dev": "nodemon tests.js"
 	},
 	"author": "Ran Amar",
 	"license": "ISC",
