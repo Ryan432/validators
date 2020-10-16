@@ -21,6 +21,10 @@
 
 # Types and available options for each type:
 
+-   All JS types are supported, if types are not listed bellow they have a regular validation of JS with '`typeof`' method.
+
+---
+
 ## Strings
 
 All available properties for string values:
