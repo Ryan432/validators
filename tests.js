@@ -6,7 +6,7 @@ const validationTest = async () => {
 		email: 'ryan@utopia.tech',
 		username: 'Ryan432',
 		date: '2020-10-15 18:05:00',
-		number: 5,
+		number: true,
 		string: 'min length 4',
 		ip: '127.0.0.1',
 		object: {

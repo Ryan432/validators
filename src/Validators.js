@@ -94,8 +94,7 @@ class Validators {
 
 	static validateNumber = async ({ keyValue, type, objectKey, minNum, maxNum, numRange, options }) => {
 		const validateNumberErrors = [];
-		let isNumber = Number(keyValue);
-		isNumber = isNumber === 0 ? true : isNumber;
+		const isNumber = _.isNumber(keyValue);
 
 		if (numRange) {
 			if ((!_.isArray(numRange) && _.size(numRange) > 2) || _.size(numRange) < 2) {
@@ -320,10 +319,6 @@ class Validators {
 							const validateNumber = await this.validateNumber({ keyValue, type, objectKey, minNum, maxNum, numRange, options });
 							if (!validateNumber.valid) {
 								validationErrors = [...validationErrors, ...validateNumber];
-								validationErrors.push({
-									valid: false,
-									message: `The property '${objectKey}' data type is invalid required ${type}.'`
-								});
 							}
 						}
 						break;
