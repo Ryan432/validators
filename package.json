@@ -1,9 +1,8 @@
 {
 	"name": "json-validators",
-	"version": "1.0.2",
-	"type": "module",
+	"version": "1.0.4",
 	"description": "Package for validate JSON objects.",
-	"main": "index.js",
+	"main": "./src/Validators",
 	"scripts": {
 		"test": "node tests.js",
 		"dev": "nodemon tests.js"

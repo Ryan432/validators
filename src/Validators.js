@@ -1,7 +1,7 @@
-import aigle from 'aigle';
-import _ from 'lodash';
-import moment from 'moment';
-import { ValidationError } from './Errors.js';
+const aigle = require('aigle');
+const _ = require('lodash');
+const moment = require('moment');
+const { ValidationError } = require('./Errors.js');
 
 const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 const emailRegExPattern = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
@@ -457,4 +457,4 @@ class Validators {
 	};
 }
 
-export default Validators;
+module.exports = Validators;

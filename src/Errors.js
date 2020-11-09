@@ -10,4 +10,4 @@ class ValidationError extends Error {
 	}
 }
 
-export { ValidationError };
+module.exports = { ValidationError };

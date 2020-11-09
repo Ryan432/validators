@@ -1,4 +1,4 @@
-import Validators from './src/Validators.js';
+const Validators = require('./src/Validators.js');
 
 const validationTest = async () => {
 	const objectToValidate = {
