@@ -235,7 +235,7 @@ class Validators {
 			});
 		}
 
-		if (objectSchema) {
+		if (objectSchema && _.size(objectSchema) > 0) {
 			try {
 				const { allowSchemaKeysOnly = true } = objectSchema;
 				delete objectSchema.allowSchemaKeysOnly;

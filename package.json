@@ -1,6 +1,6 @@
 {
 	"name": "json-validators",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"description": "Package for validate JSON objects.",
 	"main": "./src/Validators",
 	"scripts": {
